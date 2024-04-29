@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.2.1/classic/ckeditor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+          crossorigin="anonymous">
+</head>
+<style>
+  .navbar {
+        background-color: #ffa500;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .logout {
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .nav-links a:hover {
+        color: #ff4500;
+    }
+    .dashboard{
+     color: #fff;
+        cursor: pointer;
+    }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 2px solid #ff8c00;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mb-3 {
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="url"],
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #ff8c00;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ff4500;
+}
+
+.file-input,
+.link-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.file-input input[type="file"],
+.link-input input[type="url"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#editorContainer {
+    margin-top: 20px;
+}
+
+.ck-editor__editable {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    form {
+        padding: 10px;
+    }
+}
+</style>
+<body>
+<div class="navbar">
+    <div class="logo">College Events</div>
+    <div class="nav-links">
+        <a th:href="@{/logout}" class="logout">Logout</a>
+        <a th:href="@{/dashboard}" class="dashboard">Dashboard</a>
+    </div>
+</div>
+<form id="myForm" th:object="${email}" method="post" enctype="multipart/form-data" th:action="@{/submitEmail}">
+    <div id="editorContainer">
+        <!-- CKEditor instance will be added here -->
+    </div>
+    <hr>
+    <div>
+        <div id="fileInputs">
+            <!-- Initial file input field -->
+            <div class="mb-3 file-input">
+                <label for="file1">Choose File:</label>
+                <input class="form-control" name="files" type="file" id="file1" accept="image/*,.pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx,.csv,.ppt,.pptx,.mp3,.wav,.flac,.mp4,.avi,.mov,.zip,.rar,.7z,.txt,.html,.css,.js,.py,.java">
+                <button type="button"  onclick="removeFileInput(this)">Remove</button>
+            </div>
+        </div>
+        <button type="button"  onclick="addFileInput()">Add File</button><br/><br/>
+    </div>
+    <hr><hr>
+    <button type="button"  th:attr="onclick='submitForm(\'' + ${contact.contactId} + '\');'">Submit</button>
+
+</form>
+<script>
+    ClassicEditor
+        .create(document.getElementById('editorContainer'))
+        .catch(error => {
+            console.error(error);
+        });
+
+    var fileIndex = 1;
+
+    function addFileInput() {
+        fileIndex++;
+        var newFileInput = '<div class="mb-3 file-input">' +
+            '<label for="file' + fileIndex + '">Choose File:</label>' +
+            '<input class="form-control" name="files" type="file" id="file' + fileIndex + '" >' +
+            '<button type="button"  onclick="removeFileInput(this)">Remove</button>' +
+            '</div>';
+        $('#fileInputs').append(newFileInput);
+    }
+
+    function removeFileInput(button) {
+        $(button).parent().remove();
+    }
+
+    function submitForm(contactId) {
+        const formData = new FormData(document.getElementById('myForm'));
+        const editors=document.querySelectorAll('.ck-editor__editable');
+        let singleContent='';
+        editors.forEach((editor,index)=>{
+        singleContent+=editor.innerHTML;
+        });
+         const fillerRegex = /^<p><br data-cke-filler="true"><\/p>$/;
+
+        if (!fillerRegex.test(singleContent)) {
+         var myHTML=singleContent;
+         var strippedHtml=myHTML.replace(/<[^>]+>/g, '');
+         formData.append('contents', strippedHtml);
+        }else{
+         formData.append('contents',"null");
+        }
+        // Send formData to server using AJAX
+        fetch('/submitEmail/'+ contactId, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+               window.location.href = '/contacts';
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Function to strip HTML tags from the content
+    function stripHtml(html) {
+        let doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+    }
+</script>
+</body>
+</html>

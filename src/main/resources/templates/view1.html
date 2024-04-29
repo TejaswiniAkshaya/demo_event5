@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+      crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+<style>
+
+    .navbar {
+        background-color: #ffa500;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .logout {
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .nav-links a:hover {
+        color: #ff4500;
+    }
+    .dashboard{
+     color: #fff;
+        cursor: pointer;
+    }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+.chat-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.received {
+    background-color: #dcf8c6;
+    text-align: left;
+}
+
+.sent {
+    background-color: #dcf8c6;
+    text-align: right;
+}
+
+.message-content {
+    position: relative;
+    padding: 10px;
+}
+
+.file-preview {
+     width: 100%; /* Adjust width to fill the container */
+    max-width: 300px; /* Set maximum width for larger screens */
+    margin-bottom: 10px;
+}
+
+
+.file-preview img {
+     width: 100%; /* Adjust width to fill the container */
+    max-width: 300px; /* Set maximum width for larger screens */
+    margin-bottom: 10px;
+}
+
+.file-actions {
+    display: flex;
+    justify-content: flex-start; /* Align to the left */
+    margin-top: 10px;
+}
+
+.file-actions form {
+    margin: 0; /* Remove default form margin */
+}
+
+.file-actions button {
+    padding: 8px 16px; /* Adjust button padding */
+    background-color: #ff8c00; /* Orange button background color */
+    color: #fff; /* Button text color */
+    border: none; /* Remove button border */
+    border-radius: 5px; /* Add button border radius */
+    cursor: pointer; /* Show pointer on hover */
+}
+
+.file-actions button:hover {
+    background-color: #ff4500; /* Button background color on hover */
+}
+
+.file-link {
+    color: #007bff;
+    text-decoration: none;
+}
+.file-link1 {
+    color: white;
+    text-decoration: none;
+}
+.file-link:hover {
+    text-decoration: underline;
+}
+.file-link1:hover {
+    color: white;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .chat-message {
+        flex-direction: column;
+    }
+}
+
+</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Files</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+          crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+
+</head>
+<body>
+<div class="navbar">
+    <div class="logo">College Events</div>
+    <div class="nav-links">
+        <a th:href="@{/logout}" class="logout">Logout</a>
+        <a th:href="@{/dashboard}" class="dashboard">Dashboard</a>
+    </div>
+</div>
+<div class="chat-container">
+
+    <div th:each="content : ${event.contents}">
+    <div class="chat-message received">
+        <div class="message-content" >
+            <!-- Iterate over the list of contents -->
+
+                <div th:utext="${content.content}"></div>
+
+        </div>
+
+    </div>
+    </div>
+<div th:each="link : ${event.urls}">
+    <div class="chat-message sent">
+        <div class="message-content">
+            <!-- Iterate over the list of links -->
+            <p >
+                Here is a link to <a th:href="${link.name}" class="file-link" target="_blank" th:text="${link.name}">example.com</a> that you can click on.
+            </p>
+        </div>
+    </div>
+</div>
+
+
+    <div th:each="fileTopic : ${event.fileList}">
+        <div class="chat-message received">
+        <div class="message-content" >
+            <p>Attached file: <span style="font-size: 16px; color: orange; font-weight: bold;"th:text="${fileTopic.name}">document.pdf</span></p>
+            <div class="file-preview">
+                <!-- File preview or icon -->
+                <a th:if="${fileTopic.contentType == 'application/pdf'}"  th:href="@{'/viewfile?id=' + ${fileTopic.id}}" target="_blank">
+                    <div class="pdf-preview" th:attr="data-id=${fileTopic.id}"></div>
+                </a>
+                <a  th:if="${fileTopic.contentType == 'image/jpeg' or fileTopic.contentType == 'image/png' or fileTopic.contentType == 'image/gif' or fileTopic.contentType == 'image/jpg'}"
+                    th:href="@{'/viewfile?id=' + ${fileTopic.id}}" target="_blank">
+                    <img th:src="@{'/image?id='+ ${fileTopic.id}}" width="100px" height="100px">
+                </a>
+                </a>
+            </div>
+            <!-- Download button -->
+            <div class="file-actions">
+               <!-- <form th:action="@{'/downloadfile?id=' + ${fileTopic.id}}" method="get">
+                    <button > Download</button>
+                </form>-->
+                <button><a class="file-link1" th:href="@{'/downloadfile?id=' + ${fileTopic.id}}" > Download</a></button>
+
+            </div>
+        </div>
+    </div>
+    </div>
+
+</div>
+<script>
+   const pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+    // Render PDF previews
+    document.addEventListener('DOMContentLoaded', function () {
+        const previews = document.querySelectorAll('.pdf-preview');
+        previews.forEach(preview => {
+            const id = preview.getAttribute('data-id');
+            renderPdfPreview(id, preview);
+        });
+    });
+
+   function renderPreview(id, previewElement) {
+    const url = '/viewfile?id=' + id;
+    const contentType = previewElement.getAttribute('data-content-type');
+
+    if (contentType.startsWith('application/pdf')) {
+        // Render PDF preview
+        renderPdfPreview(id, previewElement);
+    } else if (contentType.startsWith('image/')) {
+        // Render image preview
+        previewElement.innerHTML = `<img src="${url}" width="100px" height="50px">`;
+    } else if (contentType === 'text/plain') {
+        // Display text files in new tab
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Open</a>`;
+    } else if (contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        // Display docx and xlsx files in new tab
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Open</a>`;
+    } else {
+        // Handle other file types by providing a download link
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Download</a>`;
+    }
+}
+
+
+    function renderPdfPreview(id, previewElement) {
+        const url = '/viewfile?id=' + id;
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            return pdf.getPage(1);
+        }).then(page => {
+            const scale = 0.3;
+            const viewport = page.getViewport({ scale: scale });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            page.render(renderContext).promise.then(() => {
+                previewElement.appendChild(canvas);
+            });
+        });
+    }
+</script>
+</body>
+</html>

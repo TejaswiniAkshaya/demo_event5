@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.2.1/classic/ckeditor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+          crossorigin="anonymous">
+</head>
+<style>
+.navbar {
+        background-color: #ffa500;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .logout {
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .nav-links a:hover {
+        color: #ff4500;
+    }
+    .dashboard{
+     color: #fff;
+        cursor: pointer;
+    }
+   body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+}
+
+form {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 2px solid #ff8c00;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mb-3 {
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="url"],
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #ff8c00;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #ff4500;
+}
+
+.file-input,
+.link-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.file-input input[type="file"],
+.link-input input[type="url"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#editorContainer {
+    margin-top: 20px;
+}
+
+.ck-editor__editable {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    form {
+        padding: 10px;
+    }
+}
+</style>
+<body>
+<div class="navbar">
+    <div class="logo">College Events</div>
+    <div class="nav-links">
+        <a th:href="@{/logout}" class="logout">Logout</a>
+        <a th:href="@{/dashboard}" class="dashboard">Dashboard</a>
+    </div>
+</div>
+<form id="myForm" method="post" enctype="multipart/form-data" th:action="@{/upload4}" th:object="${event}">
+    <div class="mb-3">
+        <label for="adminName">Admin Name:</label>
+        <input class="form-control" name="adminName" type="text" id="adminName" th:field="*{adminName}">
+    </div>
+
+    <div class="mb-3">
+        <label for="yearOption" class="form-label">Year:</label>
+        <select class="form-select" id="yearOption" name="yearOption" th:field="*{yearOption}">
+            <option value="1stYear">1st Year</option>
+            <option value="2ndYear">2nd Year</option>
+            <option value="3rdYear">3rd Year</option>
+            <option value="4thYear">4th Year</option>
+            <option value="Faculty">Faculty</option>
+            <option value="Events">Events</option>
+            <option value="DanceClubs">Dance Club</option>
+            <option value="SportsClubs">Sports Club</option>
+            <option value="MusicClubs">Music Club</option>
+            <option value="TechnicalClubs">Technical Club</option>
+            <option value="Placements">Placements</option>
+            <option value="Admin">Admin</option>
+            <option value="Permissions">Permissions</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="topic">Event Topic:</label>
+        <input class="form-control" name="topic" type="text" id="topic" th:field="*{topic}">
+    </div>
+
+    <div>
+        <div th:each="content, iterStat : *{contents}">
+            <!-- CKEditor instance for editing existing content -->
+            <div th:id="'Divs' + ${iterStat.index}">
+                <div>
+                    <!-- Use CKEditor textarea to edit the content -->
+                    <textarea id="editor-${iterStat.index}" class="ck-editor__editable" th:utext="${content.content}"></textarea>
+                </div>
+                <!-- Add a hidden input field to store the updated content -->
+                <input type="hidden" id="updatedContent-${iterStat.index}" value="${content.content}" />
+                <!-- Add an update button to submit the edited contents -->
+                <button type="button"  th:attr="onclick='updateContent(\'' + ${event.id} + '\',\'' + ${iterStat.index} + '\', \'' + ${content.id} + '\');'">
+                    <i class="fas fa-trash"></i> Update Content
+                </button>
+                <button type="button"  th:attr="onclick='deleteContent(\'' + ${event.id} + '\',\'' + ${iterStat.index} + '\', \'' + ${content.id} + '\');'">
+                    <i class="fas fa-trash"></i> Delete Content
+                </button>
+            </div>
+
+        </div>
+    </div>
+    <br>
+   <hr>
+    <div>
+
+        <div class="mb-3">
+            <h5>Files:</h5>
+            <div th:each="file, fileStat : *{fileList}">
+                <div class="row align-items-center" th:id="'file_' + ${file.id}">
+                    <div class="col-auto">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div class="col">
+                        <span th:text="${file.name}"></span>
+                        <button type="button"  th:attr="onclick='deleteFile(\'' + ${event.id}+  '\',\'' + ${file.id}+  '\');'">
+                            <i class="fas fa-trash"></i> Delete File
+                        </button>
+                    </div>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </div>
+<br>
+    <hr>
+    <div>
+        <div class="mb-3">
+            <h5>Links:</h5>
+            <div th:each="url, urlStat : *{urls}">
+                <div class="row align-items-center" th:id="'url_' + ${url.id}">
+                    <div class="col-auto">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                    <div class="col">
+                        <a th:href="${url.name}" target="_blank" th:text="${url.name}"></a>
+                        <button type="button"  th:attr="onclick='deleteUrl(\'' + ${event.id}+  '\',\'' + ${url.id}+  '\');'">
+                            <i class="fas fa-trash"></i> Delete Url
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br><hr>
+    <div>
+    <div id="editorContainer">
+        <!-- CKEditor instances will be added dynamically here -->
+    </div>
+    <button type="button" onclick="addEditor()">Add CKEditor</button>
+    </div>
+    <br>
+    <hr>
+    <div>
+        <div id="fileInputs">
+        <div class="mb-3 file-input">
+            <label for="file1">Choose File:</label>
+            <input class="form-control" name="files" type="file" id="file1">
+            <button type="button"  onclick="removeFileInput(this)">Remove</button>
+        </div>
+        </div>
+        <button type="button"  onclick="addFileInput()">Add File</button>
+    </div>
+
+    <div>
+        <div id="linkInputs">
+            <!-- Initial link input field -->
+            <div class="mb-3 link-input">
+                <label for="link1">Link:</label>
+                <input class="form-control" name="links" type="url" id="link1">
+                <button type="button"  onclick="removeLinkInput(this)">Remove</button>
+            </div>
+        </div>
+        <button type="button"  onclick="addLinkInput()">Add Link</button>
+    </div>
+    <br><hr>
+    <button type="button" th:attr="onclick='submitForm(\'' + ${event.id} + '\');'">Submit</button>
+</form>
+
+<script>
+  var fileIndex = 1;
+  function addFileInput() {
+        fileIndex++;
+        var newFileInput = '<div class="mb-3 file-input">' +
+            '<label for="file' + fileIndex + '">Choose File:</label>' +
+            '<input class="form-control" name="files" type="file" id="file' + fileIndex + '" >' +
+            '<button type="button"  onclick="removeFileInput(this)">Remove</button>' +
+            '</div>';
+        $('#fileInputs').append(newFileInput);
+    }
+
+
+    var linkIndex = 1; // Initialize link index counter
+
+    function addLinkInput() {
+        linkIndex++; // Increment link index
+        var newLinkInput = '<div class="mb-3 link-input">' +
+            '<label for="link' + linkIndex + '">Link:</label>' +
+            '<input class="form-control" name="links" type="url" id="link' + linkIndex + '">' +
+            '<button type="button"  onclick="removeLinkInput(this)">Remove</button>' +
+            '</div>';
+        $('#linkInputs').append(newLinkInput);
+    }
+
+     function removeLinkInput(button) {
+        $(button).parent().remove();
+    }
+     function removeFileInput(button) {
+        $(button).parent().remove();
+    }
+
+     function deleteFile(eventId,fileId) {
+
+       $.ajax({
+        url: '/edit/' + eventId + '/deleteFile/' + fileId,
+        type: 'DELETE',
+        success: function(response) {
+         var divToRemove = document.getElementById('file_' + fileId);
+          console.log(divToRemove);
+          if (divToRemove) {
+                divToRemove.remove();
+          } else {
+            console.error('Div element not found with ID:', fileId);
+          }
+        },
+        error: function(xhr, status, error) {
+            // Handle error response (optional)
+        }
+    });
+    return false;
+    }
+
+     function deleteUrl(eventId,urlId){
+     $.ajax({
+      url: '/edit/' + eventId + '/deleteUrl/' + urlId,
+       type: 'DELETE',
+        success: function(response) {
+          console.log("success");
+          var divToRemove = document.getElementById('url_' + urlId);
+          console.log(divToRemove);
+          if (divToRemove) {
+                divToRemove.remove();
+            } else {
+                console.error('Div element not found with ID:', urlId);
+            }
+        },
+        error: function(xhr, status, error) {
+            // Handle error response (optional)
+        }
+    });
+     return false;
+    }
+
+     function deleteContent(eventId,index,contentId){
+      $.ajax({
+            url: '/edit/' + eventId + '/deleteContent/' + contentId,
+            type: 'DELETE',
+            success: function(response) {
+
+             console.log("success");
+             var divToRemove = document.getElementById('Divs' + index);
+             console.log(divToRemove);
+            if (divToRemove) {
+                divToRemove.remove();
+            } else {
+                console.error('Div element not found with ID:', index);
+            }
+            },
+            error: function(xhr, status, error) {
+             console.log("error");
+            }
+        });
+        return false;
+     }
+
+
+
+
+
+    var editors = [];
+    var updatedContents = [];
+    document.addEventListener('DOMContentLoaded', function () {
+         document.querySelectorAll('.ck-editor__editable').forEach(function (element, index) {
+            ClassicEditor
+                .create(element)
+                .then(editor => {
+
+
+                    editors[index] = editor;
+                    updatedContents[index]=editor.getData();
+
+                    editor.model.document.on('change:data', () => {
+
+                        const updatedContent = editor.getData();
+
+                        updatedContents[index] = updatedContent;
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        });
+    });
+
+
+    function updateContent(eventId,index,id) {
+
+        const updatedContent = updatedContents[index];
+        console.log(index);
+        console.log(id);
+        console.log(updatedContent);
+
+         $.ajax({
+                url: '/edit/' + eventId + '/updateContent/' + id,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: updatedContent,
+                success: function(response) {
+                    console.log("Edit success");
+                    var editorDiv = document.getElementById('Divs' + index);
+                    if (editorDiv) {
+                    var message = document.createElement('div');
+                    message.textContent = 'Content updated successfully!';
+                    message.classList.add('success-message');
+                    message.style.backgroundColor = '#2ecc71'; // Green color
+                    message.style.padding = '20px'; // Add padding for space
+                    message.style.marginBottom = '30px'; // Add margin for space
+                    message.style.marginTop = '30px';
+                    message.style.color = '#fff';
+                    editorDiv.parentNode.insertBefore(message, editorDiv);
+                      setTimeout(function() {
+                    message.remove();
+                }, 3000); // 3000 milliseconds = 3 seconds
+
+            } else {
+                console.error("Div element not found with ID:", id);
+            }
+
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+       }
+
+
+    function addEditor() {
+    const editorContainer = document.getElementById('editorContainer');
+    const editorDiv = document.createElement('div');
+    const editorId = 'editor-' + (editorContainer.children.length + 1);
+    editorDiv.id = editorId;
+    editorContainer.appendChild(editorDiv);
+    ClassicEditor
+      .create(document.getElementById(editorId))
+      .catch(error => {
+        console.error(error);
+      });
+  }
+
+  function submitForm(eventId) {
+    const formData = new FormData(document.getElementById('myForm'));
+    const editors = document.getElementById('editorContainer').querySelectorAll('.ck-editor__editable');
+     if (editors.length === 1) {
+    // Concatenate the content of the single CKEditor instance
+    let singleContent = '';
+    editors.forEach((editor, index) => {
+        singleContent += editor.innerHTML;
+    });
+    const fillerRegex = /^<p><br data-cke-filler="true"><\/p>$/;
+
+if (!fillerRegex.test(singleContent)) {
+
+    formData.append('contents', singleContent);
+}else{
+formData.append('contents',"null");
+}
+} else {
+    // Append the content of each CKEditor instance as usual
+    editors.forEach((editor, index) => {
+   let content = editor.innerHTML.trim();
+   console.log(content);
+    const fillerRegex = /^<p><br data-cke-filler="true"><\/p>$/;
+    if (!fillerRegex.test(content)) {
+        formData.append('contents[]', content);
+    }
+
+    });
+
+  }
+   fetch('/edit/' + eventId + '/editEvent', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+           window.location.href = '/dashboard';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+  }
+</script>
+</body>

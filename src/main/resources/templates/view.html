@@ -1,0 +1,87 @@
+<!-- display.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Files</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+          crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+
+</head>
+<body>
+<div class="event-files">
+    <div th:each="fileTopic : ${event.fileList}" class="file">
+        <a th:href="@{'/downloadfile?id=' + ${fileTopic.id}}"><i class="fa fa-download"></i></a>
+        <a th:if="${fileTopic.contentType == 'image/jpeg' or fileTopic.contentType == 'image/png' or fileTopic.contentType == 'image/gif' or fileTopic.contentType == 'image/jpg'}"
+           th:href="@{'/viewfile?id=' + ${fileTopic.id}}" target="_blank">
+            <img th:src="@{'/image?id='+ ${fileTopic.id}}" width="100px" height="50px">
+        </a>
+        <a th:if="${fileTopic.contentType == 'application/pdf'}"
+           th:href="@{'/viewfile?id=' + ${fileTopic.id}}" target="_blank">
+            <div class="pdf-preview" th:attr="data-id=${fileTopic.id}"></div>
+        </a>
+        <p th:text="${fileTopic.name}"></p>
+    </div>
+</div>
+</body>
+<script>
+       const pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+    // Render PDF previews
+    document.addEventListener('DOMContentLoaded', function () {
+        const previews = document.querySelectorAll('.pdf-preview');
+        previews.forEach(preview => {
+            const id = preview.getAttribute('data-id');
+            renderPdfPreview(id, preview);
+        });
+    });
+
+   function renderPreview(id, previewElement) {
+    const url = '/viewfile?id=' + id;
+    const contentType = previewElement.getAttribute('data-content-type');
+
+    if (contentType.startsWith('application/pdf')) {
+        // Render PDF preview
+        renderPdfPreview(id, previewElement);
+    } else if (contentType.startsWith('image/')) {
+        // Render image preview
+        previewElement.innerHTML = `<img src="${url}" width="100px" height="50px">`;
+    } else if (contentType === 'text/plain') {
+        // Display text files in new tab
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Open</a>`;
+    } else if (contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        // Display docx and xlsx files in new tab
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Open</a>`;
+    } else {
+        // Handle other file types by providing a download link
+        previewElement.innerHTML = `<a href="${url}" target="_blank">Download</a>`;
+    }
+}
+
+
+    function renderPdfPreview(id, previewElement) {
+        const url = '/viewfile?id=' + id;
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            return pdf.getPage(1);
+        }).then(page => {
+            const scale = 0.5;
+            const viewport = page.getViewport({ scale: scale });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            page.render(renderContext).promise.then(() => {
+                previewElement.appendChild(canvas);
+            });
+        });
+    }
+</script>
+</html>
