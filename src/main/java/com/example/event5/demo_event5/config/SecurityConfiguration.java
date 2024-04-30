@@ -15,6 +15,7 @@ public class SecurityConfiguration {
 
             requests.requestMatchers("/login").permitAll();
             requests.requestMatchers("/logout").authenticated();
+            requests.requestMatchers("/index").hasRole("ADMIN");
             requests.requestMatchers("/display/AdminView").hasRole("ADMIN");
             requests.requestMatchers("/upload").hasRole("ADMIN");
             requests.requestMatchers("/editEvent/**").hasRole("ADMIN");
